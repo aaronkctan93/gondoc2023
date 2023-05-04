@@ -1,0 +1,48 @@
+version: "3"
+
+services:
+    # 資料庫
+    mysql:
+        image: mysql:5.7
+        restart: always
+        ports:
+            - "30306:3306"
+        environment:
+            # MYSQL_USER: root # 現在預設帳號已經是root了，無需額外設定
+            # MYSQL_USER: ""
+            MYSQL_ROOT_PASSWORD: qwe123
+        command: mysqld --host_cache_size=0 --default_time_zone=Asia/Taipei --sql-mode=""
+        volumes:
+            - db:/var/lib/mysql
+            - ./deploy/db:/docker-entrypoint-initdb.d
+
+    # 資料庫介面
+    adminer:
+        image: phpmyadmin/phpmyadmin:5
+        links:
+            - mysql:db
+        restart: always
+        ports:
+            - "8080:80"
+        depends_on:
+            - mysql
+
+    redis:
+        image: redis:4.0.14
+        ports:
+            - "30679:6379"
+        volumes:
+            - cache:/data
+
+    redis-admin:
+        image: rediscommander/redis-commander
+        ports:
+            - "8081:8081"
+        environment:
+            - REDIS_HOSTS=redis:redis:6379:0
+        depends_on:
+            - redis
+
+volumes:
+    db:
+    cache:
